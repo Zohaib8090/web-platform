@@ -1,3 +1,130 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-1",
+      "description": "A futuristic cityscape at night.",
+      "imageUrl": "https://images.unsplash.com/photo-1566262258598-53deb7089bf8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzY2ktZmklMjBjaXR5fGVufDB8fHx8MTc2NzI3MDM4NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sci-fi city"
+    },
+    {
+      "id": "thumb-1",
+      "description": "A lone astronaut on a red planet.",
+      "imageUrl": "https://images.unsplash.com/photo-1614727187346-ec3a009092b0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzcGFjZSUyMGFzdHJvbmF1dHxlbnwwfHx8fDE3NjcyNDQ1ODR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "space astronaut"
+    },
+    {
+      "id": "thumb-2",
+      "description": "A high-speed car chase in a bustling city.",
+      "imageUrl": "https://images.unsplash.com/photo-1709431319470-5f3f4f377b50?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxjYXIlMjBjaGFzZXxlbnwwfHx8fDE3NjcxOTE4MzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "car chase"
+    },
+    {
+      "id": "thumb-3",
+      "description": "Two detectives examining a clue in a dark alley.",
+      "imageUrl": "https://images.unsplash.com/photo-1611611158648-6f4cd8a96c21?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxjcmltZSUyMHNjZW5lfGVufDB8fHx8MTc2NzI2NDU5MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "crime scene"
+    },
+    {
+      "id": "thumb-4",
+      "description": "A couple laughing on a park bench.",
+      "imageUrl": "https://images.unsplash.com/photo-1566759996874-04d713cc224a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cm9tYW50aWMlMjBjb3VwbGV8ZW58MHx8fHwxNzY3MTY0MTQzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "romantic couple"
+    },
+    {
+      "id": "thumb-5",
+      "description": "A group of friends at a comedy club.",
+      "imageUrl": "https://images.unsplash.com/photo-1610964199994-6416eb887998?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzdGFuZC11cCUyMGNvbWVkeXxlbnwwfHx8fDE3NjcxOTIwMDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "stand-up comedy"
+    },
+    {
+      "id": "thumb-6",
+      "description": "A majestic dragon flying over mountains.",
+      "imageUrl": "https://images.unsplash.com/photo-1763296557023-853de43acadc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxmYW50YXN5JTIwZHJhZ29ufGVufDB8fHx8MTc2NzIyOTc5N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fantasy dragon"
+    },
+    {
+      "id": "thumb-7",
+      "description": "A historical courtroom drama.",
+      "imageUrl": "https://images.unsplash.com/photo-1660784670019-33a36fd82515?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjb3VydHJvb20lMjBkcmFtYXxlbnwwfHx8fDE3NjcyNTcxOTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "courtroom drama"
+    },
+    {
+      "id": "thumb-8",
+      "description": "A child exploring a magical forest.",
+      "imageUrl": "https://images.unsplash.com/photo-1599395759345-c36e366934d9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtYWdpY2FsJTIwZm9yZXN0fGVufDB8fHx8MTc2NzI1MDI0N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "magical forest"
+    },
+    {
+      "id": "thumb-9",
+      "description": "A chef meticulously preparing a dish.",
+      "imageUrl": "https://images.unsplash.com/photo-1556910103-1c02745aae4d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjb29raW5nJTIwc2hvd3xlbnwwfHx8fDE3NjcyNzAzODR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cooking show"
+    },
+    {
+      "id": "thumb-10",
+      "description": "A tense chess match.",
+      "imageUrl": "https://images.unsplash.com/photo-1712059615727-ffab184122df?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjaGVzcyUyMG1hdGNofGVufDB8fHx8MTc2NzI3MDM4NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "chess match"
+    },
+    {
+      "id": "thumb-11",
+      "description": "An old wizard casting a spell.",
+      "imageUrl": "https://images.unsplash.com/photo-1600637453426-7c64826b19d9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx3aXphcmQlMjBzcGVsbHxlbnwwfHx8fDE3NjcyNzAzODR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wizard spell"
+    },
+    {
+      "id": "thumb-12",
+      "description": "A robot looking at a sunset.",
+      "imageUrl": "https://images.unsplash.com/photo-1657641898365-48ae7d64e676?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxyb2JvdCUyMHN1bnNldHxlbnwwfHx8fDE3NjcyNTcxOTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "robot sunset"
+    },
+    {
+      "id": "thumb-13",
+      "description": "A spy on a covert mission.",
+      "imageUrl": "https://images.unsplash.com/photo-1569087682520-45253cc2e0ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzcHklMjBtaXNzaW9ufGVufDB8fHx8MTc2NzI3MDM4NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "spy mission"
+    },
+    {
+      "id": "thumb-14",
+      "description": "A hilarious office prank.",
+      "imageUrl": "https://images.unsplash.com/photo-1758518730627-d45034f8c859?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxvZmZpY2UlMjBjb21lZHl8ZW58MHx8fHwxNzY3MjcwMzg0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "office comedy"
+    },
+    {
+      "id": "thumb-15",
+      "description": "A family on a road trip.",
+      "imageUrl": "https://images.unsplash.com/photo-1559734840-f9509ee5677f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxmYW1pbHklMjB0cmlwfGVufDB8fHx8MTc2NzI3MDM4NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "family trip"
+    },
+    {
+      "id": "thumb-16",
+      "description": "Exploring ancient ruins.",
+      "imageUrl": "https://images.unsplash.com/photo-1717518215340-0d1184c493fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhbmNpZW50JTIwcnVpbnN8ZW58MHx8fHwxNzY3MjAwNDM3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ancient ruins"
+    },
+    {
+      "id": "thumb-17",
+      "description": "A thrilling superhero battle.",
+      "imageUrl": "https://images.unsplash.com/photo-1701389899408-b3d5d3186bdb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzdXBlcmhlcm8lMjBiYXR0bGV8ZW58MHx8fHwxNzY3MjcwMzg0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "superhero battle"
+    },
+    {
+      "id": "thumb-18",
+      "description": "An animated character on an adventure.",
+      "imageUrl": "https://images.unsplash.com/photo-1760768034139-3c2f829ec1b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjYXJ0b29uJTIwYWR2ZW50dXJlfGVufDB8fHx8MTc2NzI1NTY4OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cartoon adventure"
+    },
+    {
+      "id": "thumb-19",
+      "description": "A scary figure in a haunted house.",
+      "imageUrl": "https://images.unsplash.com/photo-1616163527093-41acfce459ce?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxob3Jyb3IlMjBob3VzZXxlbnwwfHx8fDE3NjcyNzAzODR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "horror house"
+    },
+    {
+      "id": "thumb-20",
+      "description": "A beautiful nature documentary scene.",
+      "imageUrl": "https://images.unsplash.com/photo-1687046576739-c9ffb32bc5dd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxuYXR1cmUlMjBkb2N1bWVudGFyeXxlbnwwfHx8fDE3NjcyNjk2OTd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "nature documentary"
+    }
+  ]
 }

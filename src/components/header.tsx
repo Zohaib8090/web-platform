@@ -1,0 +1,101 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Search, User, LogOut, Clapperboard, ListVideo } from "lucide-react";
+import Logo from "./logo";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { useAuth } from "@/context/auth-provider";
+import { cn } from "@/lib/utils";
+import { useSearch } from "@/context/search-provider";
+import React from "react";
+
+export default function Header() {
+  const { isLoggedIn, logout } = useAuth();
+  const router = useRouter();
+  const { searchQuery, setSearchQuery } = useSearch();
+
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+  };
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 max-w-screen-2xl items-center">
+        <Logo />
+        <nav className="ml-10 hidden items-center space-x-6 text-sm font-medium md:flex">
+          <Link
+            href="/"
+            className="text-foreground/70 transition-colors hover:text-foreground"
+          >
+            Home
+          </Link>
+          <Link
+            href="/watchlist"
+            className="text-foreground/70 transition-colors hover:text-foreground"
+          >
+            Watchlist
+          </Link>
+        </nav>
+        <div className="flex flex-1 items-center justify-end gap-4">
+          <div className="relative w-full max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search titles, genres..."
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          {isLoggedIn ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <User className="h-5 w-5" />
+                  <span className="sr-only">User menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push("/watchlist")}>
+                  <ListVideo className="mr-2 h-4 w-4" />
+                  <span>Watchlist</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled>
+                  <Clapperboard className="mr-2 h-4 w-4" />
+                  <span>History</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log Out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => router.push("/login")}>
+                Log In
+              </Button>
+              <Button onClick={() => router.push("/signup")} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                Sign Up
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
