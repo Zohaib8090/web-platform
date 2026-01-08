@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Suspense } from 'react';
@@ -104,7 +105,7 @@ function SearchResults() {
         {query ? `Search Results for "${query}"` : 'Search for a movie'}
       </h1>
 
-      {selectedMovieId ? (
+      {selectedMovieId && playerUrl ? (
         <div className="mb-8">
             <div className="overflow-hidden rounded-lg border shadow-lg">
                 <div className="aspect-video w-full bg-black">
