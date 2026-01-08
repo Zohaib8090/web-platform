@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const omdbResponse = await fetch(
-      `${OMDb_API_URL}?apikey=${OMDb_API_KEY}&s=${encodeURIComponent(query)}&type=movie`
+      `${OMDb_API_URL}?apikey=${OMDb_API_KEY}&s=${encodeURIComponent(query)}` // Removed type=movie to get both movies and series
     );
 
     if (!omdbResponse.ok) {

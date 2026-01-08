@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Suspense } from 'react';
@@ -12,35 +11,44 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-interface Movie {
+interface Media {
   imdbID: string;
   Title: string;
   Poster: string;
   Year: string;
+  Type: 'movie' | 'series' | 'episode';
 }
 
-const servers = [
-  { name: 'Primary Server', urlTemplate: 'https://vidsrc.me/embed/movie?imdb={id}' },
-  { name: 'Server 2', urlTemplate: 'https://vidsrc.to/embed/movie/{id}' },
-  { name: 'Server 3 (su)', urlTemplate: 'https://embed.su/movie?imdb={id}' },
+type Server = {
+  name: string;
+  urlTemplate: string;
+};
+
+const servers: Server[] = [
+  { name: 'Server 1', urlTemplate: 'https://vidsrc.me/embed/{type}?imdb={id}' },
+  { name: 'Server 2', urlTemplate: 'https://vidsrc.to/embed/{type}/{id}' },
+  { name: 'Server 3', urlTemplate: 'https://embed.su/embed/{type}?imdb={id}' },
+  { name: 'Server 4', urlTemplate: 'https://vidsrc.pro/embed/{type}/{id}' },
+  { name: 'Server 5', urlTemplate: 'https://www.2embed.cc/embed/{id}' },
 ];
 
 function SearchResults() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q');
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
-  const [selectedServer, setSelectedServer] = useState(servers[0].urlTemplate);
+  const [media, setMedia] = useState<Media[]>([]);
+  const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
+  const [selectedServer, setSelectedServer] = useState(servers[0]);
   const [playerUrl, setPlayerUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (query) {
-      const fetchMovies = async () => {
+      const fetchMedia = async () => {
         setIsLoading(true);
         setError(null);
-        setMovies([]);
+        setMedia([]);
+        setSelectedMedia(null);
         try {
           const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
           if (!response.ok) {
@@ -48,18 +56,14 @@ function SearchResults() {
           }
           const data = await response.json();
           if (data.Response === "False") {
-            setMovies([]);
-            setSelectedMovieId(null);
+            setMedia([]);
           } else {
-            // Filter for movies with both a valid poster and a valid imdbID
-            const validMovies = data.Search.filter(
-              (movie: Movie) => movie.Poster && movie.Poster !== 'N/A' && movie.imdbID && movie.imdbID.startsWith('tt')
+            const validMedia = data.Search.filter(
+              (item: Media) => item.Poster && item.Poster !== 'N/A' && item.imdbID && item.imdbID.startsWith('tt')
             );
-            setMovies(validMovies);
-            if (validMovies.length > 0) {
-              setSelectedMovieId(validMovies[0].imdbID);
-            } else {
-              setSelectedMovieId(null);
+            setMedia(validMedia);
+            if (validMedia.length > 0) {
+              setSelectedMedia(validMedia[0]);
             }
           }
         } catch (err: any) {
@@ -68,51 +72,67 @@ function SearchResults() {
           setIsLoading(false);
         }
       };
-      fetchMovies();
+      fetchMedia();
     } else {
-      setMovies([]);
-      setSelectedMovieId(null);
+      setMedia([]);
+      setSelectedMedia(null);
     }
   }, [query]);
 
   useEffect(() => {
-    if (selectedMovieId) {
-      // Ensure the ID has the 'tt' prefix, although OMDb usually provides it.
-      const sanitizedId = selectedMovieId.startsWith('tt') ? selectedMovieId : `tt${selectedMovieId}`;
-      setPlayerUrl(selectedServer.replace('{id}', sanitizedId));
+    if (selectedMedia) {
+      // Ensure the ID has the 'tt' prefix.
+      const sanitizedId = selectedMedia.imdbID.startsWith('tt') ? selectedMedia.imdbID : `tt${selectedMedia.imdbID}`;
+      
+      let url = selectedServer.urlTemplate;
+      
+      if (selectedMedia.Type === 'series') {
+        // Handle server-specific series URL formats
+        if (selectedServer.urlTemplate.includes('{type}')) {
+             url = url.replace('{type}', 'tv');
+        }
+        // Special case for servers that might not use the `type` parameter
+        // For series, add season and episode params
+        if (selectedServer.name.startsWith("Server 1") || selectedServer.name.startsWith("Server 3")) {
+             url += `&season=1&episode=1`
+        }
+      } else {
+         if (selectedServer.urlTemplate.includes('{type}')) {
+            url = url.replace('{type}', 'movie');
+         }
+      }
+      
+      setPlayerUrl(url.replace('{id}', sanitizedId));
+
     } else {
       setPlayerUrl('');
     }
-  }, [selectedMovieId, selectedServer]);
+  }, [selectedMedia, selectedServer]);
 
-  const handleServerChange = (urlTemplate: string) => {
-    setSelectedServer(urlTemplate);
+  const handleServerChange = (server: Server) => {
+    setSelectedServer(server);
   };
   
-  const handleMovieSelect = (movie: Movie) => {
-    if(movie.imdbID){
-        setSelectedMovieId(movie.imdbID);
-        // Reset to primary server when a new movie is selected
-        setSelectedServer(servers[0].urlTemplate);
-    } else {
-        setSelectedMovieId(null);
-    }
+  const handleMediaSelect = (item: Media) => {
+    setSelectedMedia(item);
+    // Reset to primary server when new media is selected
+    setSelectedServer(servers[0]);
   }
 
   return (
     <div className="container mx-auto max-w-screen-2xl py-8">
       <h1 className="mb-4 text-3xl font-bold tracking-tight">
-        {query ? `Search Results for "${query}"` : 'Search for a movie'}
+        {query ? `Search Results for "${query}"` : 'Search for movies and series'}
       </h1>
 
-      {selectedMovieId && playerUrl ? (
+      {selectedMedia ? (
         <div className="mb-8">
-            <div className="overflow-hidden rounded-lg border shadow-lg">
+            <div className="overflow-hidden rounded-lg border bg-card shadow-lg">
                 <div className="aspect-video w-full bg-black">
                     <iframe
                     key={playerUrl} // Re-renders iframe when URL changes
                     src={playerUrl}
-                    title="Movie Player"
+                    title="Media Player"
                     className="h-full w-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
@@ -120,16 +140,17 @@ function SearchResults() {
                 </div>
             </div>
             <div className="mt-4">
-                <h3 className="mb-2 text-sm font-medium text-muted-foreground">Server Switcher:</h3>
-                <div className="flex flex-wrap gap-2">
+                <h3 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">Server Switcher</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                 {servers.map((server) => (
                     <Button
                     key={server.name}
-                    variant={selectedServer === server.urlTemplate ? 'default' : 'outline'}
+                    variant={selectedServer.name === server.name ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => handleServerChange(server.urlTemplate)}
+                    onClick={() => handleServerChange(server)}
                     className={cn(
-                        selectedServer === server.urlTemplate && "bg-accent hover:bg-accent/90 text-accent-foreground"
+                        "transition-all duration-200",
+                        selectedServer.name === server.name && "bg-accent hover:bg-accent/90 text-accent-foreground shadow-[0_0_10px] shadow-accent/50"
                     )}
                     >
                     {server.name}
@@ -139,21 +160,21 @@ function SearchResults() {
             </div>
         </div>
       ) : (
-        query && !isLoading && (
+        query && !isLoading && !error && (
             <div className="mb-8 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-card py-20 text-center">
                 <ServerCrash className="h-16 w-16 text-muted-foreground/50" />
                 <h2 className="mt-6 text-xl font-semibold">Source Not Found</h2>
-                <p className="mt-2 text-sm text-muted-foreground">A playable source could not be found for the selected media.</p>
+                <p className="mt-2 text-sm text-muted-foreground">A playable source could not be found for the selected media, or your search yielded no results.</p>
             </div>
         )
       )}
 
 
       {isLoading && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {Array.from({ length: 12 }).map((_, index) => (
             <div key={index} className="space-y-2">
-              <Skeleton className="h-[255px] w-[170px] rounded-lg" />
+              <Skeleton className="aspect-[2/3] w-full rounded-lg" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
             </div>
@@ -163,33 +184,28 @@ function SearchResults() {
 
       {error && <p className="text-center text-destructive">{error}</p>}
       
-      {!isLoading && !error && movies.length > 0 && (
+      {!isLoading && !error && media.length > 0 && (
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {movies.map((movie) => (
+          {media.map((item) => (
             <Card
-              key={movie.imdbID}
-              className="cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
-              onClick={() => handleMovieSelect(movie)}
+              key={item.imdbID}
+              className="cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg bg-card border-border/60"
+              onClick={() => handleMediaSelect(item)}
             >
               <CardContent className="p-0">
                 <div className="relative aspect-[2/3]">
-                  {movie.Poster && movie.Poster !== 'N/A' ? (
-                     <Image
-                        src={movie.Poster}
-                        alt={movie.Title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
-                      />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-secondary">
-                        <Film className="h-10 w-10 text-muted-foreground" />
-                    </div>
-                  )}
+                  <Image
+                    src={item.Poster}
+                    alt={item.Title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <div className="p-3">
-                  <h3 className="truncate font-semibold">{movie.Title}</h3>
-                  <p className="text-sm text-muted-foreground">{movie.Year}</p>
+                  <h3 className="truncate font-semibold">{item.Title}</h3>
+                  <p className="text-sm text-muted-foreground">{item.Year}</p>
                 </div>
               </CardContent>
             </Card>
@@ -197,7 +213,7 @@ function SearchResults() {
         </div>
       )}
 
-      {!isLoading && !error && movies.length === 0 && query && (
+      {!isLoading && !error && media.length === 0 && query && (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-20 text-center">
             <SearchX className="h-16 w-16 text-muted-foreground/50" />
             <h2 className="mt-6 text-xl font-semibold">No Results Found</h2>
