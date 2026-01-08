@@ -30,6 +30,11 @@ export async function GET(request: NextRequest) {
     const data = await omdbResponse.json();
     
     if (data.Response === "False") {
+      // OMDb returns Response "False" for "Too many results." and "Movie not found."
+      // Log the specific error from OMDb for debugging, but return an empty array to the client for simplicity.
+      if (data.Error) {
+        console.error("OMDb API reported an error:", data.Error);
+      }
       return NextResponse.json({ Search: [], Response: "True" });
     }
     
