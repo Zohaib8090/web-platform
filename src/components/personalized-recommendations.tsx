@@ -56,7 +56,8 @@ export default function PersonalizedRecommendations({
     };
 
     fetchRecommendations();
-  }, [viewingHistory]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (isLoading) {
     return (
