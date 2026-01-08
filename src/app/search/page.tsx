@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface Media {
   imdbID: string;
@@ -22,14 +23,17 @@ interface Media {
 type Server = {
   name: string;
   urlTemplate: string;
+  status: 'HD' | 'Fast' | 'Stable';
 };
 
 const servers: Server[] = [
-  { name: 'Server 1', urlTemplate: 'https://vidsrc.me/embed/{type}?imdb={id}' },
-  { name: 'Server 2', urlTemplate: 'https://vidsrc.to/embed/{type}/{id}' },
-  { name: 'Server 3', urlTemplate: 'https://embed.su/embed/{type}?imdb={id}' },
-  { name: 'Server 4', urlTemplate: 'https://vidsrc.pro/embed/{type}/{id}' },
-  { name: 'Server 5', urlTemplate: 'https://www.2embed.cc/embed/{id}' },
+  { name: 'Server 1', urlTemplate: 'https://vidsrc.me/embed/{type}?imdb={id}', status: 'HD' },
+  { name: 'Server 2', urlTemplate: 'https://vidsrc.to/embed/{type}/{id}', status: 'Fast' },
+  { name: 'Server 3', urlTemplate: 'https://embed.su/embed/{type}?imdb={id}', status: 'Stable' },
+  { name: 'Server 4', urlTemplate: 'https://vidsrc.pro/embed/{type}/{id}', status: 'HD' },
+  { name: 'Server 5', urlTemplate: 'https://www.2embed.cc/embed/{id}', status: 'Fast' },
+  { name: 'VidLink', urlTemplate: 'https://vidlink.to/embed?imdb={id}', status: 'HD' },
+  { name: 'AutoEmbed', urlTemplate: 'https://autoembed.to/{type}/imdb/{id}', status: 'Fast' }
 ];
 
 function SearchResults() {
@@ -63,7 +67,7 @@ function SearchResults() {
             );
             setMedia(validMedia);
             if (validMedia.length > 0) {
-              setSelectedMedia(validMedia[0]);
+              handleMediaSelect(validMedia[0]);
             }
           }
         } catch (err: any) {
@@ -85,24 +89,22 @@ function SearchResults() {
       const sanitizedId = selectedMedia.imdbID.startsWith('tt') ? selectedMedia.imdbID : `tt${selectedMedia.imdbID}`;
       
       let url = selectedServer.urlTemplate;
-      
+      let typeForUrl = 'movie'; // Default type
+
       if (selectedMedia.Type === 'series') {
-        // Handle server-specific series URL formats
-        if (selectedServer.urlTemplate.includes('{type}')) {
-             url = url.replace('{type}', 'tv');
+        typeForUrl = 'tv';
+      }
+
+      url = url.replace('{type}', typeForUrl).replace('{id}', sanitizedId);
+
+      // Special handling for series to add season/episode
+      if (selectedMedia.Type === 'series') {
+        if (selectedServer.name === 'Server 1' || selectedServer.name === 'Server 3' || selectedServer.name === 'VidLink') {
+             url += `&season=1&episode=1`;
         }
-        // Special case for servers that might not use the `type` parameter
-        // For series, add season and episode params
-        if (selectedServer.name.startsWith("Server 1") || selectedServer.name.startsWith("Server 3")) {
-             url += `&season=1&episode=1`
-        }
-      } else {
-         if (selectedServer.urlTemplate.includes('{type}')) {
-            url = url.replace('{type}', 'movie');
-         }
       }
       
-      setPlayerUrl(url.replace('{id}', sanitizedId));
+      setPlayerUrl(url);
 
     } else {
       setPlayerUrl('');
@@ -141,30 +143,33 @@ function SearchResults() {
             </div>
             <div className="mt-4">
                 <h3 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">Server Switcher</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
                 {servers.map((server) => (
                     <Button
-                    key={server.name}
-                    variant={selectedServer.name === server.name ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleServerChange(server)}
-                    className={cn(
-                        "transition-all duration-200",
-                        selectedServer.name === server.name && "bg-accent hover:bg-accent/90 text-accent-foreground shadow-[0_0_10px] shadow-accent/50"
-                    )}
-                    >
-                    {server.name}
+                        key={server.name}
+                        variant={selectedServer.name === server.name ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handleServerChange(server)}
+                        className={cn(
+                            "group relative justify-center transition-all duration-200",
+                            selectedServer.name === server.name && "bg-accent hover:bg-accent/90 text-accent-foreground shadow-[0_0_10px] shadow-accent/50"
+                        )}
+                        >
+                        {server.name}
+                        <Badge variant={selectedServer.name === server.name ? "destructive" : "secondary"} className="absolute -top-2 -right-2 text-xs px-1.5 py-0.5 h-auto leading-tight">
+                          {server.status}
+                        </Badge>
                     </Button>
                 ))}
                 </div>
             </div>
         </div>
       ) : (
-        query && !isLoading && !error && (
+        query && !isLoading && !error && media.length > 0 && (
             <div className="mb-8 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-card py-20 text-center">
-                <ServerCrash className="h-16 w-16 text-muted-foreground/50" />
-                <h2 className="mt-6 text-xl font-semibold">Source Not Found</h2>
-                <p className="mt-2 text-sm text-muted-foreground">A playable source could not be found for the selected media, or your search yielded no results.</p>
+                <Film className="h-16 w-16 text-muted-foreground/50" />
+                <h2 className="mt-6 text-xl font-semibold">Select a Movie or Show</h2>
+                <p className="mt-2 text-sm text-muted-foreground">Click on any title below to start watching.</p>
             </div>
         )
       )}
@@ -182,14 +187,22 @@ function SearchResults() {
         </div>
       )}
 
-      {error && <p className="text-center text-destructive">{error}</p>}
+      {error && (
+        <div className="mb-8 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-destructive/50 bg-card py-20 text-center">
+            <ServerCrash className="h-16 w-16 text-destructive/80" />
+            <h2 className="mt-6 text-xl font-semibold">An Error Occurred</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{error}</p>
+        </div>
+      )}
       
       {!isLoading && !error && media.length > 0 && (
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {media.map((item) => (
             <Card
               key={item.imdbID}
-              className="cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg bg-card border-border/60"
+              className={cn("cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg bg-card border-border/60",
+                selectedMedia?.imdbID === item.imdbID && "ring-2 ring-accent shadow-accent/40 scale-105"
+              )}
               onClick={() => handleMediaSelect(item)}
             >
               <CardContent className="p-0">
