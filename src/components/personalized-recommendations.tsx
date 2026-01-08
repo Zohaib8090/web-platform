@@ -26,8 +26,8 @@ export default function PersonalizedRecommendations({
           viewingHistory,
           numRecommendations: 10,
         });
-
-        const allVideos = getVideos();
+        
+        const allVideos = await getVideos();
         const videos = output.recommendations
           .map((recTitle) =>
             allVideos.find(

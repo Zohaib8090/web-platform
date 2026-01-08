@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, User, LogOut, Clapperboard, ListVideo } from "lucide-react";
+import { Search, User, LogOut, Clapperboard, ListVideo, Upload } from "lucide-react";
 import Logo from "./logo";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -15,18 +15,36 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { useAuth } from "@/context/auth-provider";
-import { cn } from "@/lib/utils";
+import { useAuth as useFirebaseAuth } from "@/firebase";
+import { signOut } from "firebase/auth";
 import { useSearch } from "@/context/search-provider";
 import React from "react";
+import { useToast } from "@/hooks/use-toast";
+
 
 export default function Header() {
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn } = useAuth();
+  const auth = useFirebaseAuth();
   const router = useRouter();
   const { searchQuery, setSearchQuery } = useSearch();
+  const { toast } = useToast();
 
-  const handleLogout = () => {
-    logout();
-    router.push("/");
+  const handleLogout = async () => {
+    try {
+        await signOut(auth);
+        toast({
+            title: "Logged Out",
+            description: "You have been successfully logged out.",
+        });
+        router.push("/");
+    } catch (error) {
+        console.error("Logout error:", error);
+        toast({
+            variant: "destructive",
+            title: "Logout Failed",
+            description: "An error occurred while logging out.",
+        });
+    }
   };
 
   return (
@@ -40,6 +58,14 @@ export default function Header() {
           >
             Home
           </Link>
+           {isLoggedIn && (
+            <Link
+              href="/publish"
+              className="text-foreground/70 transition-colors hover:text-foreground"
+            >
+              Publish
+            </Link>
+          )}
           <Link
             href="/watchlist"
             className="text-foreground/70 transition-colors hover:text-foreground"
@@ -69,6 +95,10 @@ export default function Header() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push("/publish")}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  <span>Publish Video</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/watchlist")}>
                   <ListVideo className="mr-2 h-4 w-4" />
                   <span>Watchlist</span>

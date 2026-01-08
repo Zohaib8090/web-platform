@@ -5,8 +5,13 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import {
+  Auth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 
-import { useAuth } from "@/context/auth-provider";
+import { useAuth as useFirebaseAuth } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,18 +22,42 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import Logo from "./logo";
+import { FirestorePermissionError } from "@/firebase";
+import { errorEmitter } from "@/firebase/error-emitter";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(1, { message: "Password is required." }),
 });
 
+async function handleAuthError(auth: Auth, error: any, email: string) {
+    let operation: 'get' | 'list' | 'create' | 'update' | 'delete' = 'get';
+    // This is a rough way to guess the operation.
+    // In a real app, you might have more context.
+    if (error.code === 'auth/email-already-in-use') {
+        operation = 'create';
+    }
+
+    const permissionError = new FirestorePermissionError({
+        path: `users/${email}`, // Using email as a placeholder for user id
+        operation: operation,
+    });
+    errorEmitter.emit('permission-error', permissionError);
+}
+
+
 export function LoginForm() {
   const router = useRouter();
-  const { login } = useAuth();
+  const auth = useFirebaseAuth();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -36,22 +65,34 @@ export function LoginForm() {
     defaultValues: { email: "", password: "" },
   });
 
-  function onSubmit(values: z.infer<typeof loginSchema>) {
-    login();
-    toast({
-      title: "Login Successful",
-      description: "Welcome back!",
-    });
-    router.push("/");
+  async function onSubmit(values: z.infer<typeof loginSchema>) {
+    try {
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+      toast({
+        title: "Login Successful",
+        description: "Welcome back!",
+      });
+      router.push("/");
+    } catch (error: any) {
+        console.error(error);
+        handleAuthError(auth, error, values.email);
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: error.message || "An unexpected error occurred.",
+      });
+    }
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
-            <Logo className="mb-4" />
+          <Logo className="mb-4" />
           <CardTitle className="text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
+          <CardDescription>
+            Enter your credentials to access your account
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -76,14 +117,22 @@ export function LoginForm() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                Log In
+              <Button
+                type="submit"
+                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? "Logging In..." : "Log In"}
               </Button>
             </form>
           </Form>
@@ -99,29 +148,44 @@ export function LoginForm() {
   );
 }
 
-
 const signupSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters." }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters." }),
 });
 
 export function SignupForm() {
   const router = useRouter();
-  const { login } = useAuth();
-   const { toast } = useToast();
+  const auth = useFirebaseAuth();
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  function onSubmit(values: z.infer<typeof signupSchema>) {
-    login();
-    toast({
-      title: "Account Created",
-      description: "Welcome to StreamVerse!",
-    });
-    router.push("/");
+  async function onSubmit(values: z.infer<typeof signupSchema>) {
+    try {
+      await createUserWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      );
+      toast({
+        title: "Account Created",
+        description: "Welcome to StreamVerse!",
+      });
+      router.push("/");
+    } catch (error: any) {
+        console.error(error);
+        handleAuthError(auth, error, values.email);
+      toast({
+        variant: "destructive",
+        title: "Sign Up Failed",
+        description: error.message || "An unexpected error occurred.",
+      });
+    }
   }
 
   return (
@@ -155,14 +219,22 @@ export function SignupForm() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                Sign Up
+              <Button
+                type="submit"
+                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? "Signing Up..." : "Sign Up"}
               </Button>
             </form>
           </Form>

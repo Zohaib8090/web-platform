@@ -1,7 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
+import { collection, doc, serverTimestamp } from "firebase/firestore";
+import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import type { WatchlistItem } from "@/lib/types";
+
 
 interface WatchlistContextType {
   watchlist: string[];
@@ -13,45 +18,43 @@ interface WatchlistContextType {
 const WatchlistContext = createContext<WatchlistContextType | undefined>(undefined);
 
 export function WatchlistProvider({ children }: { children: ReactNode }) {
-  const [watchlist, setWatchlist] = useState<string[]>([]);
   const { toast } = useToast();
+  const { user } = useUser();
+  const firestore = useFirestore();
 
-  useEffect(() => {
-    try {
-      const storedWatchlist = localStorage.getItem("watchlist");
-      if (storedWatchlist) {
-        setWatchlist(JSON.parse(storedWatchlist));
-      }
-    } catch (error) {
-      console.error("Failed to parse watchlist from localStorage", error);
-      setWatchlist([]);
-    }
-  }, []);
+  const watchlistCollectionRef = useMemoFirebase(
+    () => (user ? collection(firestore, 'users', user.uid, 'watchlist') : null),
+    [user, firestore]
+  );
+  
+  const { data: watchlistItems } = useCollection<WatchlistItem>(watchlistCollectionRef);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem("watchlist", JSON.stringify(watchlist));
-    } catch (error) {
-      console.error("Failed to save watchlist to localStorage", error);
-    }
-  }, [watchlist]);
+  const watchlist = watchlistItems?.map(item => item.videoId) || [];
 
   const addToWatchlist = (videoId: string, videoTitle: string) => {
-    if (!watchlist.includes(videoId)) {
-      setWatchlist((prev) => [...prev, videoId]);
-      toast({
-        title: "Added to Watchlist",
-        description: `"${videoTitle}" has been added to your list.`,
-      });
-    }
+    if (!user || !firestore) return;
+     const newWatchlistItem: Omit<WatchlistItem, 'id'> = {
+        userId: user.uid,
+        videoId: videoId,
+        addedDate: serverTimestamp() as any,
+     };
+    addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'watchlist'), newWatchlistItem);
+    toast({
+      title: "Added to Watchlist",
+      description: `"${videoTitle}" has been added to your list.`,
+    });
   };
 
   const removeFromWatchlist = (videoId: string, videoTitle: string) => {
-    setWatchlist((prev) => prev.filter((id) => id !== videoId));
-    toast({
-      title: "Removed from Watchlist",
-      description: `"${videoTitle}" has been removed from your list.`,
-    });
+    if (!user || !firestore || !watchlistItems) return;
+    const watchlistItem = watchlistItems.find(item => item.videoId === videoId);
+    if(watchlistItem) {
+        deleteDocumentNonBlocking(doc(firestore, 'users', user.uid, 'watchlist', watchlistItem.id));
+        toast({
+            title: "Removed from Watchlist",
+            description: `"${videoTitle}" has been removed from your list.`,
+        });
+    }
   };
 
   const isInWatchlist = (videoId: string) => {

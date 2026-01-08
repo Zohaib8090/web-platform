@@ -25,7 +25,7 @@ export default function HomePageClient({
     return videos.filter(
       (video) =>
         video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        video.description.toLowerCase().includes(searchQuery.toLowerCase())
+        (video.description && video.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );
   }, [searchQuery, videos]);
 

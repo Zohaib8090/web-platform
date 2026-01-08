@@ -1,29 +1,47 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-provider";
 import { useWatchlist } from "@/context/watchlist-provider";
 import { getVideos } from "@/lib/data";
 import VideoCard from "@/components/video-card";
 import { ListVideo } from "lucide-react";
+import type { Video } from "@/lib/types";
 
 export default function WatchlistPage() {
   const { isLoggedIn } = useAuth();
   const router = useRouter();
   const { watchlist } = useWatchlist();
-
-  const allVideos = getVideos();
-  const watchlistVideos = allVideos.filter(video => watchlist.includes(video.id));
+  const [watchlistVideos, setWatchlistVideos] = useState<Video[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoggedIn) {
       router.replace("/login");
     }
   }, [isLoggedIn, router]);
+  
+  useEffect(() => {
+    const fetchWatchlistVideos = async () => {
+      setIsLoading(true);
+      const allVideos = await getVideos();
+      const videos = allVideos.filter(video => watchlist.includes(video.id));
+      setWatchlistVideos(videos);
+      setIsLoading(false);
+    }
+    if(isLoggedIn) {
+        fetchWatchlistVideos();
+    }
+  }, [watchlist, isLoggedIn])
+
 
   if (!isLoggedIn) {
     return null; // or a loading spinner
+  }
+  
+  if (isLoading) {
+    return <div className="container max-w-screen-2xl py-8"><h1 className="mb-8 text-3xl font-bold tracking-tight">My Watchlist</h1><p>Loading...</p></div>
   }
 
   return (

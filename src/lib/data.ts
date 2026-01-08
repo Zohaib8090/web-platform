@@ -1,5 +1,7 @@
 import type { Video, Category } from './types';
 import { PlaceHolderImages } from './placeholder-images';
+import { collection, getDocs } from 'firebase/firestore';
+import { initializeFirebase } from '@/firebase';
 
 const categories: Category[] = [
   { id: 'sci-fi', name: 'Sci-Fi' },
@@ -11,7 +13,7 @@ const categories: Category[] = [
   { id: 'documentary', name: 'Documentary' },
 ];
 
-const videos: Video[] = [
+const staticVideos: Video[] = [
   {
     id: '1',
     title: 'Cybernetic Dawn',
@@ -184,11 +186,25 @@ const videos: Video[] = [
   },
 ];
 
-export function getVideos() {
-  return videos;
+export async function getVideos() {
+  const { firestore } = initializeFirebase();
+  const videosCollection = collection(firestore, 'videos');
+  const videoSnapshot = await getDocs(videosCollection);
+  const firestoreVideos = videoSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Video));
+
+  // Combine static and firestore videos, ensuring no duplicates if IDs overlap
+  const combinedVideos = [...staticVideos];
+  firestoreVideos.forEach(fsVideo => {
+    if (!combinedVideos.some(v => v.id === fsVideo.id)) {
+      combinedVideos.push(fsVideo);
+    }
+  });
+
+  return combinedVideos;
 }
 
-export function getVideoById(id: string) {
+export async function getVideoById(id: string) {
+  const videos = await getVideos();
   return videos.find(video => video.id === id);
 }
 
@@ -196,10 +212,12 @@ export function getCategories() {
   return categories;
 }
 
-export function getVideosByCategory(categoryId: string) {
+export async function getVideosByCategory(categoryId: string) {
+  const videos = await getVideos();
   return videos.filter(video => video.category === categoryId);
 }
 
-export function getFeaturedVideo() {
+export async function getFeaturedVideo() {
+    const videos = await getVideos();
     return videos.find(v => v.id === '17')!;
 }

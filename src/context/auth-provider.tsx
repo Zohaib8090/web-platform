@@ -1,48 +1,36 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { ReactNode } from "react";
+import { useUser, FirebaseClientProvider } from "@/firebase";
 
 interface AuthContextType {
   isLoggedIn: boolean;
-  login: () => void;
-  logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true);
+function AuthProviderInternal({ children }: { children: ReactNode }) {
+  const { user, isUserLoading } = useUser();
 
-  useEffect(() => {
-    const storedAuthStatus = localStorage.getItem("isLoggedIn");
-    if (storedAuthStatus === "true") {
-      setIsLoggedIn(true);
-    }
-    setLoading(false);
-  }, []);
-
-  const login = () => {
-    localStorage.setItem("isLoggedIn", "true");
-    setIsLoggedIn(true);
-  };
-
-  const logout = () => {
-    localStorage.removeItem("isLoggedIn");
-    setIsLoggedIn(false);
-  };
-
-  const value = { isLoggedIn, login, logout };
-
-  if (loading) {
+  if (isUserLoading) {
     return null; // Or a loading spinner
   }
+
+  const value = { isLoggedIn: !!user };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+export function AuthProvider({ children }: { children: ReactNode }) {
+  return (
+    <FirebaseClientProvider>
+      <AuthProviderInternal>{children}</AuthProviderInternal>
+    </FirebaseClientProvider>
+  )
+}
+
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context = React.useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }

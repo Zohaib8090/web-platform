@@ -4,9 +4,9 @@ import HeroSection from "@/components/hero-section";
 import HomePageClient from "@/components/home-page-client";
 
 export default async function Home() {
-  const videos = getVideos();
+  const videos = await getVideos();
   const categories = getCategories();
-  const featuredVideo = getFeaturedVideo();
+  const featuredVideo = await getFeaturedVideo();
 
   // A hardcoded viewing history to get personalized recommendations
   const viewingHistory = [
@@ -14,6 +14,10 @@ export default async function Home() {
     "Blade Runner 2049",
     "Attack on Titan",
   ];
+
+  if (!featuredVideo) {
+    return <div>Loading...</div>
+  }
 
   return (
     <div className="flex flex-col">
