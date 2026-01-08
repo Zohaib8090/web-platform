@@ -25,7 +25,9 @@ export default function HomePageClient({
       const videos = await getVideos();
       setAllVideos(videos);
     }
-    fetchAllVideos();
+    if (typeof window !== 'undefined') {
+        fetchAllVideos();
+    }
   }, []);
 
   const filteredVideos = useMemo(() => {
@@ -67,13 +69,17 @@ export default function HomePageClient({
         ) : (
           <>
             {recommendationsSlot}
-            {categories.map((category) => (
-              <VideoCarousel
-                key={category.id}
-                title={category.name}
-                videos={allVideos.filter((video) => video.category === category.id)}
-              />
-            ))}
+            {categories.map((category) => {
+              const categoryVideos = allVideos.filter((video) => video.category === category.id);
+              if (categoryVideos.length === 0) return null;
+              return (
+                <VideoCarousel
+                  key={category.id}
+                  title={category.name}
+                  videos={categoryVideos}
+                />
+              )
+            })}
           </>
         )}
       </div>
