@@ -127,20 +127,22 @@ function SearchResults() {
           <div className="mb-8">
               <div className="relative overflow-hidden rounded-lg border bg-card shadow-2xl shadow-accent/10">
                   <div className="aspect-video w-full bg-black">
-                      {isPlayerLoading && (
+                      {(isPlayerLoading || !playerUrl) && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                               <Loader2 className="h-16 w-16 animate-spin text-accent" />
                           </div>
                       )}
-                      <iframe
-                        key={playerUrl}
-                        src={playerUrl}
-                        title="Media Player"
-                        className={cn("h-full w-full", isPlayerLoading ? "opacity-0" : "opacity-100 transition-opacity duration-500")}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        onLoad={() => setIsPlayerLoading(false)}
-                      ></iframe>
+                      {playerUrl && (
+                        <iframe
+                          key={playerUrl}
+                          src={playerUrl}
+                          title="Media Player"
+                          className={cn("h-full w-full", isPlayerLoading ? "opacity-0" : "opacity-100 transition-opacity duration-500")}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          onLoad={() => setIsPlayerLoading(false)}
+                        ></iframe>
+                      )}
                   </div>
               </div>
               <div className="mt-6">
