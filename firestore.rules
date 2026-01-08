@@ -1,0 +1,167 @@
+/**
+ * This ruleset enforces a mixed security model for a video streaming application.
+ * It provides strict user-ownership for private data while allowing public
+ * read access for shared content like videos and categories.
+ *
+ * Core Philosophy:
+ * The security model is built on the principle of least privilege, segregating
+ * user-specific private data from publicly accessible content. User data is
+ * locked down to the owner, while public content is readable by anyone but
+ * can only be modified by its creator or an administrator. A global admin role
+ * allows for site-wide moderation and management.
+ *
+ * Data Structure:
+ * - /users/{userId}: Private user profile data.
+ * - /users/{userId}/watchlist/{watchlistItemId}: A user's private watchlist.
+ * - /videos/{videoId}: Publicly searchable video metadata.
+ * - /categories/{categoryId}: Publicly readable video categories.
+ * - /roles_admin/{uid}: A collection where document existence grants admin rights.
+ *
+ * Key Security Decisions:
+ * - Public Discoverability: The `/videos` and `/categories` collections are
+ *   publicly listable to support search and discovery features.
+ * - Strict Ownership for Writes: Users can only create, update, or delete
+ *   content they own (e.g., their profile, their watchlist, or videos they uploaded).
+ * - Admin Override: Users with an entry in the `/roles_admin` collection have
+ *   full read and write access to all data for moderation purposes.
+ * - No User Listing: To protect user privacy, it is not possible to list all
+ *   documents in the `/users` collection.
+ *
+ * Denormalization for Authorization:
+ * To ensure fast and secure authorization, this ruleset relies on denormalized
+ * data. For example, each document in `/videos` contains an `uploaderId` field.
+ * This avoids costly and slow `get()` calls to other documents during rule
+ * evaluation, allowing for a simple check like `isOwner(resource.data.uploaderId)`.
+ *
+ * Structural Segregation:
+ * The data model separates private user data (e.g., `/users/{userId}/watchlist`)
+ * from public content (`/videos`). This separation is more secure and performant
+ * for list operations than using a single collection with a 'isPublic' flag.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Helper Functions
+    // ----------------------------------------------------------------------
+
+    /**
+     * Checks if a user is signed into the application.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the requesting user's UID matches the provided userId.
+     * This is the foundation of the user-ownership model.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if the requesting user has an admin role.
+     * Admin status is granted by the existence of a document in the roles_admin collection.
+     */
+    function isAdmin() {
+      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /**
+     * A convenience function that grants access if the user is either the
+     * resource owner OR an administrator.
+     */
+    function isOwnerOrAdmin(userId) {
+      return isOwner(userId) || isAdmin();
+    }
+    
+    /**
+     * Validates ownership for an existing document during an update or delete.
+     * Ensures the operation targets a document that actually exists.
+     */
+    function isExistingOwnerOrAdmin(userId) {
+        return resource != null && isOwnerOrAdmin(userId);
+    }
+
+    // ----------------------------------------------------------------------
+    // Collection Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Manages user profile documents.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user can create their own user document.
+     * @deny  (get) A user cannot read another user's profile.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId} {
+      allow get: if isOwnerOrAdmin(userId);
+      allow list: if false; // Disallow listing users for privacy
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwnerOrAdmin(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwnerOrAdmin(userId);
+
+      /**
+       * @description Manages items in a user's private watchlist.
+       * @path /users/{userId}/watchlist/{watchlistItemId}
+       * @allow (create, list) The owner can add items to and list their own watchlist.
+       * @deny  (get, list) A user cannot access another user's watchlist.
+       * @principle Enforces strict ownership on a private subcollection.
+       */
+      match /watchlist/{watchlistItemId} {
+        allow get: if isOwnerOrAdmin(userId);
+        allow list: if isOwnerOrAdmin(userId);
+        allow create: if isOwnerOrAdmin(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwnerOrAdmin(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwnerOrAdmin(userId);
+      }
+    }
+    
+    /**
+     * @description Manages public video documents.
+     * @path /videos/{videoId}
+     * @allow (get, list) Any user, including unauthenticated ones, can view and list videos.
+     * @deny  (update) A user cannot update a video they did not upload.
+     * @principle Implements a "Public Read with Owner-Only Writes" pattern.
+     */
+    match /videos/{videoId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.uploaderId == request.auth.uid;
+      allow update: if (isExistingOwnerOrAdmin(resource.data.uploaderId)) && (request.resource.data.uploaderId == resource.data.uploaderId);
+      allow delete: if isExistingOwnerOrAdmin(resource.data.uploaderId);
+    }
+    
+    /**
+     * @description Manages global video categories. Read by all, written only by admins.
+     * @path /categories/{categoryId}
+     * @allow (get, list) Any user can read the list of available categories.
+     * @deny  (create, update, delete) A non-admin user cannot modify categories.
+     * @principle Protects shared, global data by restricting writes to administrators.
+     */
+    match /categories/{categoryId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+    
+    /**
+     * @description Manages admin role grants. Only other admins can manage roles.
+     * @path /roles_admin/{uid}
+     * @allow (get, create) An admin can view or create another admin.
+     * @deny  (get, create, list) A non-admin cannot view, list, or create admins.
+     * @principle Secures the role management system itself from unauthorized access.
+     */
+    match /roles_admin/{uid} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+  }
+}

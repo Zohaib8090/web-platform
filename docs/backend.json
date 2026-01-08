@@ -1,0 +1,241 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the StreamVerse platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "The username of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "joinDate": {
+          "type": "string",
+          "description": "The date and time the user joined the platform.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email",
+        "joinDate"
+      ]
+    },
+    "Video": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Video",
+      "type": "object",
+      "description": "Represents a video on the StreamVerse platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the video entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the video."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the video."
+        },
+        "uploadDate": {
+          "type": "string",
+          "description": "The date and time the video was uploaded.",
+          "format": "date-time"
+        },
+        "duration": {
+          "type": "number",
+          "description": "The duration of the video in seconds."
+        },
+        "uploaderId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Video) The ID of the user who uploaded the video."
+        },
+        "categoryIds": {
+          "type": "array",
+          "description": "References to Category. (Relationship: Category N:N Video). Array of category ids.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "url": {
+          "type": "string",
+          "description": "URL for streaming",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "uploadDate",
+        "duration",
+        "uploaderId",
+        "url"
+      ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Represents a category of videos on the StreamVerse platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the category entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the category."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the category."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description"
+      ]
+    },
+    "WatchlistItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WatchlistItem",
+      "type": "object",
+      "description": "Represents an item in a user's watchlist.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the watchlist item."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N WatchlistItem) The ID of the user who owns the watchlist item."
+        },
+        "videoId": {
+          "type": "string",
+          "description": "Reference to Video. (Relationship: Video 1:N WatchlistItem) The ID of the video in the watchlist."
+        },
+        "addedDate": {
+          "type": "string",
+          "description": "The date and time the video was added to the watchlist.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "videoId",
+        "addedDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information.  User's ID is used as document ID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/videos/{videoId}",
+        "definition": {
+          "entityName": "Video",
+          "schema": {
+            "$ref": "#/backend/entities/Video"
+          },
+          "description": "Stores publicly available video metadata. Includes denormalized 'uploaderId' for authorization independence.",
+          "params": [
+            {
+              "name": "videoId",
+              "description": "The unique identifier of the video."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Stores video category information.",
+          "params": [
+            {
+              "name": "categoryId",
+              "description": "The unique identifier of the category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/watchlist/{watchlistItemId}",
+        "definition": {
+          "entityName": "WatchlistItem",
+          "schema": {
+            "$ref": "#/backend/entities/WatchlistItem"
+          },
+          "description": "Stores watchlist items for a specific user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "watchlistItemId",
+              "description": "The unique identifier of the watchlist item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{uid}",
+        "definition": {
+          "entityName": "roles_admin",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Documents in this collection indicate admin privileges for the user with the matching UID. Existence, not content, is the significant factor.",
+          "params": [
+            {
+              "name": "uid",
+              "description": "The Firebase Auth UID of the user."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support a video streaming platform with user authentication, video search, and personalized watchlists. It emphasizes authorization independence and secure list operations.  The structure segregates user-owned data and public content, enabling clear security rules. Denormalization is used to avoid `get()` calls in security rules, ensuring atomic operations and simplifying debugging.\n\n*   **User Data:** User profiles are stored under `/users/{userId}`. Watchlist items are stored as a subcollection of users at `/users/{userId}/watchlist/{watchlistItemId}`.\n*   **Public Videos:** Publicly available videos are stored in the `/videos/{videoId}` collection.  The `uploaderId` is used to identify the uploader, and can be used in rules to ensure only the uploader can edit. Categories are stored at `/categories/{categoryId}`.  The `videos` collection is flat to enable searching and filtering.\n\n**Authorization Independence (Denormalization):** The `/videos` collection's documents includes `uploaderId` which is denormalized from the `/users/{userId}` collection. This eliminates the need for security rules to `get()` user data when evaluating access to videos.\n\n**QAPs (Secure List Operations):** The segregation of private and public videos ensures secure list operations (QAPs). Listing the `/videos` collection will return all videos, which are intended to be public. Listing `/users/{userId}/watchlist` will only return the specified user's watchlist items.\n\n**Global Roles:** To implement roles, a `/roles_admin/{uid}` collection can be used. The existence of a document in this collection grants admin privileges, as checked in the security rules."
+  }
+}
