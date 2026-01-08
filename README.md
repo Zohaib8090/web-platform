@@ -1,5 +1,9 @@
-# Firebase Studio
+🎬 About StreamVerse
+StreamVerse is an Open Source movie streaming web application. This project was created to provide a high-performance, community-led alternative for streaming enthusiasts.
 
-This is a NextJS starter in Firebase Studio.
+Developer: Zohaib
 
-To get started, take a look at src/app/page.tsx.
+Status: Open Source / Public Contribution
+
+Feel free to fork, contribute, or suggest new features!
+urlhttps://web-platform-xi-inky.vercel.app/
