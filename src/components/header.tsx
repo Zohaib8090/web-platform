@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -18,7 +19,7 @@ import { useAuth } from "@/context/auth-provider";
 import { useAuth as useFirebaseAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useSearch } from "@/context/search-provider";
-import React from "react";
+import React, { FormEvent, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -28,6 +29,13 @@ export default function Header() {
   const router = useRouter();
   const { searchQuery, setSearchQuery } = useSearch();
   const { toast } = useToast();
+
+  const handleSearchSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+        router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  }
 
   const handleLogout = async () => {
     try {
@@ -74,16 +82,16 @@ export default function Header() {
           </Link>
         </nav>
         <div className="flex flex-1 items-center justify-end gap-4">
-          <div className="relative w-full max-w-xs">
+          <form onSubmit={handleSearchSubmit} className="relative w-full max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search titles, genres..."
+              placeholder="Search movies..."
               className="pl-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-          </div>
+          </form>
           {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
