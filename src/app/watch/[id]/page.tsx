@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, use, Suspense, useState } from "react";
@@ -69,7 +70,8 @@ function WatchPageContent({ video, relatedVideos }: { video: Video, relatedVideo
 function WatchPage({ params }: WatchPageProps) {
   const { isLoggedIn } = useAuth();
   const router = useRouter();
-  const id = use(Promise.resolve(params.id));
+  const resolvedParams = use(params);
+  const id = resolvedParams.id;
   const [video, setVideo] = useState<Video | null | undefined>(undefined);
   const [relatedVideos, setRelatedVideos] = useState<Video[]>([]);
 
