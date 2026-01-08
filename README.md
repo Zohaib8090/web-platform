@@ -5,6 +5,4 @@ Developer: Zohaib
 
 Status: Open Source / Public Contribution
 
-Tech Stack: Developed on an i5/RTX 3060 environment for optimized performance.
-
 Feel free to fork, contribute, or suggest new features!
