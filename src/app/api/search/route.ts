@@ -1,12 +1,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
-const TMDB_API_URL = 'https://api.themoviedb.org/3/search/movie';
+const OMDb_API_KEY = process.env.OMDB_API_KEY;
+const OMDb_API_URL = 'https://www.omdbapi.com/';
 
 export async function GET(request: NextRequest) {
-  if (!TMDB_API_KEY) {
-    return NextResponse.json({ message: 'TMDB API key is not configured.' }, { status: 500 });
+  if (!OMDb_API_KEY) {
+    return NextResponse.json({ message: 'OMDb API key is not configured.' }, { status: 500 });
   }
 
   const { searchParams } = new URL(request.url);
@@ -17,17 +17,22 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const tmdbResponse = await fetch(
-      `${TMDB_API_URL}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&include_adult=false&language=en-US&page=1`
+    const omdbResponse = await fetch(
+      `${OMDb_API_URL}?apikey=${OMDb_API_KEY}&s=${encodeURIComponent(query)}&type=movie`
     );
 
-    if (!tmdbResponse.ok) {
-      const errorData = await tmdbResponse.json();
-      console.error('TMDB API Error:', errorData);
-      return NextResponse.json({ message: 'Failed to fetch data from TMDB.' }, { status: tmdbResponse.status });
+    if (!omdbResponse.ok) {
+      const errorData = await omdbResponse.text();
+      console.error('OMDb API Error:', errorData);
+      return NextResponse.json({ message: 'Failed to fetch data from OMDb.' }, { status: omdbResponse.status });
     }
 
-    const data = await tmdbResponse.json();
+    const data = await omdbResponse.json();
+    
+    if (data.Response === "False") {
+      return NextResponse.json({ Search: [], Response: "True" });
+    }
+    
     return NextResponse.json(data);
     
   } catch (error) {

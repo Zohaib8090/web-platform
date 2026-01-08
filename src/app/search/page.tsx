@@ -10,18 +10,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Movie {
-  id: number;
-  title: string;
-  poster_path: string;
-  overview: string;
-  release_date: string;
+  imdbID: string;
+  Title: string;
+  Poster: string;
+  Year: string;
 }
 
 function SearchResults() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q');
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
+  const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,10 +36,14 @@ function SearchResults() {
             throw new Error('Failed to fetch search results.');
           }
           const data = await response.json();
-          const moviesWithPosters = data.results.filter((movie: Movie) => movie.poster_path);
-          setMovies(moviesWithPosters);
-          if (moviesWithPosters.length > 0) {
-            setSelectedMovieId(moviesWithPosters[0].id);
+          if (data.Response === "False") {
+            setMovies([]);
+          } else {
+            const moviesWithPosters = data.Search.filter((movie: Movie) => movie.Poster && movie.Poster !== 'N/A');
+            setMovies(moviesWithPosters);
+            if (moviesWithPosters.length > 0) {
+              setSelectedMovieId(moviesWithPosters[0].imdbID);
+            }
           }
         } catch (err: any) {
           setError(err.message);
@@ -55,7 +58,7 @@ function SearchResults() {
     }
   }, [query]);
 
-  const playerUrl = selectedMovieId ? `https://vidsrc.me/embed/movie?tmdb=${selectedMovieId}` : '';
+  const playerUrl = selectedMovieId ? `https://vidsrc.me/embed/movie?imdb=${selectedMovieId}` : '';
 
   return (
     <div className="container mx-auto max-w-screen-2xl py-8">
@@ -96,16 +99,16 @@ function SearchResults() {
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {movies.map((movie) => (
             <Card
-              key={movie.id}
+              key={movie.imdbID}
               className="cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
-              onClick={() => setSelectedMovieId(movie.id)}
+              onClick={() => setSelectedMovieId(movie.imdbID)}
             >
               <CardContent className="p-0">
                 <div className="relative aspect-[2/3]">
-                  {movie.poster_path ? (
+                  {movie.Poster && movie.Poster !== 'N/A' ? (
                      <Image
-                        src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                        alt={movie.title}
+                        src={movie.Poster}
+                        alt={movie.Title}
                         fill
                         className="object-cover"
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
@@ -117,8 +120,8 @@ function SearchResults() {
                   )}
                 </div>
                 <div className="p-3">
-                  <h3 className="truncate font-semibold">{movie.title}</h3>
-                  <p className="text-sm text-muted-foreground">{movie.release_date?.split('-')[0] || 'N/A'}</p>
+                  <h3 className="truncate font-semibold">{movie.Title}</h3>
+                  <p className="text-sm text-muted-foreground">{movie.Year}</p>
                 </div>
               </CardContent>
             </Card>
