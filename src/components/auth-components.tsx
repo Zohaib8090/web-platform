@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -40,6 +41,11 @@ const loginSchema = z.object({
 });
 
 async function handleAuthError(auth: Auth, error: any, email: string) {
+    // This is for security rule violations, not standard auth errors.
+    if (error.code === 'auth/invalid-credential') {
+      return;
+    }
+
     let operation: 'get' | 'list' | 'create' | 'update' | 'delete' = 'get';
     // This is a rough way to guess the operation.
     // In a real app, you might have more context.
@@ -76,10 +82,14 @@ export function LoginForm() {
     } catch (error: any) {
         console.error(error);
         handleAuthError(auth, error, values.email);
+        const description =
+          error.code === 'auth/invalid-credential'
+            ? 'Invalid email or password. Please try again.'
+            : error.message || 'An unexpected error occurred.';
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error.message || "An unexpected error occurred.",
+        description: description,
       });
     }
   }
