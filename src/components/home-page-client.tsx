@@ -10,13 +10,11 @@ import { getVideos } from "@/lib/data";
 interface HomePageClientProps {
   staticVideos: Video[];
   categories: Category[];
-  recommendationsSlot: React.ReactNode;
 }
 
 export default function HomePageClient({
   staticVideos,
   categories,
-  recommendationsSlot,
 }: HomePageClientProps) {
   const { searchQuery } = useSearch();
   const [allVideos, setAllVideos] = useState<Video[]>(staticVideos);
@@ -69,7 +67,6 @@ export default function HomePageClient({
           )
         ) : (
           <>
-            {recommendationsSlot}
             {categories.map((category) => {
               const categoryVideos = allVideos.filter((video) => video.category === category.id);
               if (categoryVideos.length === 0) return null;
