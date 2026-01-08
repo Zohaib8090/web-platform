@@ -1,3 +1,4 @@
+
 "use client";
 
 import { recommendVideos } from "@/ai/flows/personalized-recommendations";
@@ -6,6 +7,8 @@ import type { Video } from "@/lib/types";
 import VideoCarousel from "./video-carousel";
 import { useEffect, useState } from "react";
 import { Skeleton } from "./ui/skeleton";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 
 interface PersonalizedRecommendationsProps {
   viewingHistory: string[];
@@ -18,9 +21,15 @@ export default function PersonalizedRecommendations({
     null
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRecommendations = async () => {
+      // Don't run on server
+      if (typeof window === 'undefined') return;
+
+      setIsLoading(true);
+      setError(null);
       try {
         const output = await recommendVideos({
           viewingHistory,
@@ -39,15 +48,14 @@ export default function PersonalizedRecommendations({
         setRecommendedVideos(videos);
       } catch (error) {
         console.error("Error fetching personalized recommendations:", error);
-        setRecommendedVideos([]); // Set to empty array on error to avoid constant retries
+        setError("We couldn't load your recommendations. Please try again later.");
+        setRecommendedVideos([]); // Set to empty array on error
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (typeof window !== "undefined") {
-        fetchRecommendations();
-    }
+    fetchRecommendations();
   }, [viewingHistory]);
 
   if (isLoading) {
@@ -67,6 +75,23 @@ export default function PersonalizedRecommendations({
         </div>
       </section>
     );
+  }
+
+  if (error) {
+     return (
+        <section>
+            <h2 className="mb-4 text-2xl font-bold tracking-tight">
+              Recommended For You
+            </h2>
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
+        </section>
+     )
   }
 
   if (!recommendedVideos || recommendedVideos.length === 0) {
