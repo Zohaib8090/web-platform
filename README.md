@@ -6,3 +6,4 @@ Developer: Zohaib
 Status: Open Source / Public Contribution
 
 Feel free to fork, contribute, or suggest new features!
+urlhttps://web-platform-xi-inky.vercel.app/
