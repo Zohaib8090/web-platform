@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, use, Suspense } from "react";
+import { useEffect, use, Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getVideoById, getVideosByCategory } from "@/lib/data";
 import VideoCarousel from "@/components/video-carousel";
@@ -69,8 +69,9 @@ function WatchPageContent({ video, relatedVideos }: { video: Video, relatedVideo
 function WatchPage({ params }: WatchPageProps) {
   const { isLoggedIn } = useAuth();
   const router = useRouter();
-  const [video, setVideo] = useEffectState<Video | null | undefined>(undefined);
-  const [relatedVideos, setRelatedVideos] = useEffectState<Video[]>([]);
+  const id = use(Promise.resolve(params.id));
+  const [video, setVideo] = useState<Video | null | undefined>(undefined);
+  const [relatedVideos, setRelatedVideos] = useState<Video[]>([]);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -80,7 +81,7 @@ function WatchPage({ params }: WatchPageProps) {
 
   useEffect(() => {
     const fetchVideoData = async () => {
-      const videoData = await getVideoById(params.id);
+      const videoData = await getVideoById(id);
       setVideo(videoData);
       if (videoData) {
         const related = await getVideosByCategory(videoData.category);
@@ -88,7 +89,7 @@ function WatchPage({ params }: WatchPageProps) {
       }
     };
     fetchVideoData();
-  }, [params.id]);
+  }, [id]);
 
 
   if (!isLoggedIn) {
@@ -108,24 +109,6 @@ function WatchPage({ params }: WatchPageProps) {
   }
 
   return <WatchPageContent video={video} relatedVideos={relatedVideos} />;
-}
-
-
-// A helper hook because React.use can't be used in the same component as useEffect
-function useEffectState<T>(initialValue: T): [T, (newValue: T) => void] {
-    const [state, setState] = use(
-        (async () => {
-            return {
-                value: initialValue,
-                setValue: (newValue: T) => {
-                    // This is a dummy function, the real one is below
-                },
-            };
-        })()
-    );
-    const [value, setValue] = useState(state.value);
-    state.setValue = setValue;
-    return [value, setValue];
 }
 
 export default function WatchPageWrapper(props: WatchPageProps) {

@@ -1,33 +1,43 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { Video, Category } from "@/lib/types";
 import { useSearch } from "@/context/search-provider";
 import VideoCarousel from "./video-carousel";
+import { getVideos } from "@/lib/data";
 
 interface HomePageClientProps {
-  videos: Video[];
+  staticVideos: Video[];
   categories: Category[];
   recommendationsSlot: React.ReactNode;
 }
 
 export default function HomePageClient({
-  videos,
+  staticVideos,
   categories,
   recommendationsSlot,
 }: HomePageClientProps) {
   const { searchQuery } = useSearch();
+  const [allVideos, setAllVideos] = useState<Video[]>(staticVideos);
+
+  useEffect(() => {
+    async function fetchAllVideos() {
+      const videos = await getVideos();
+      setAllVideos(videos);
+    }
+    fetchAllVideos();
+  }, []);
 
   const filteredVideos = useMemo(() => {
     if (!searchQuery) {
-      return videos;
+      return allVideos;
     }
-    return videos.filter(
+    return allVideos.filter(
       (video) =>
         video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (video.description && video.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-  }, [searchQuery, videos]);
+  }, [searchQuery, allVideos]);
 
   const videosByCategory = useMemo(() => {
     return categories.map((category) => ({
@@ -61,7 +71,7 @@ export default function HomePageClient({
               <VideoCarousel
                 key={category.id}
                 title={category.name}
-                videos={videos.filter((video) => video.category === category.id)}
+                videos={allVideos.filter((video) => video.category === category.id)}
               />
             ))}
           </>

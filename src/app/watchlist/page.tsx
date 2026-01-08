@@ -24,15 +24,15 @@ export default function WatchlistPage() {
   
   useEffect(() => {
     const fetchWatchlistVideos = async () => {
-      setIsLoading(true);
-      const allVideos = await getVideos();
-      const videos = allVideos.filter(video => watchlist.includes(video.id));
-      setWatchlistVideos(videos);
-      setIsLoading(false);
+      if(isLoggedIn) {
+        setIsLoading(true);
+        const allVideos = await getVideos();
+        const videos = allVideos.filter(video => watchlist.includes(video.id));
+        setWatchlistVideos(videos);
+        setIsLoading(false);
+      }
     }
-    if(isLoggedIn) {
-        fetchWatchlistVideos();
-    }
+    fetchWatchlistVideos();
   }, [watchlist, isLoggedIn])
 
 

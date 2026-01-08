@@ -186,12 +186,20 @@ const staticVideos: Video[] = [
   },
 ];
 
-export async function getVideos() {
-  const { firestore } = initializeFirebase();
-  const videosCollection = collection(firestore, 'videos');
-  const videoSnapshot = await getDocs(videosCollection);
-  const firestoreVideos = videoSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Video));
+export function getStaticVideos() {
+    return staticVideos;
+}
 
+export async function getVideos() {
+  let firestoreVideos: Video[] = [];
+  // We can only use client-side firebase functions on the client.
+  if (typeof window !== 'undefined') {
+    const { firestore } = initializeFirebase();
+    const videosCollection = collection(firestore, 'videos');
+    const videoSnapshot = await getDocs(videosCollection);
+    firestoreVideos = videoSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Video));
+  }
+  
   // Combine static and firestore videos, ensuring no duplicates if IDs overlap
   const combinedVideos = [...staticVideos];
   firestoreVideos.forEach(fsVideo => {

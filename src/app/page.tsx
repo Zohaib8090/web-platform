@@ -1,10 +1,10 @@
-import { getVideos, getCategories, getFeaturedVideo } from "@/lib/data";
 import PersonalizedRecommendations from "@/components/personalized-recommendations";
 import HeroSection from "@/components/hero-section";
 import HomePageClient from "@/components/home-page-client";
+import { getCategories, getFeaturedVideo, getStaticVideos } from "@/lib/data";
 
 export default async function Home() {
-  const videos = await getVideos();
+  const staticVideos = getStaticVideos();
   const categories = getCategories();
   const featuredVideo = await getFeaturedVideo();
 
@@ -23,7 +23,7 @@ export default async function Home() {
     <div className="flex flex-col">
       <HeroSection video={featuredVideo} />
       <HomePageClient
-        videos={videos}
+        staticVideos={staticVideos}
         categories={categories}
         recommendationsSlot={
           <PersonalizedRecommendations viewingHistory={viewingHistory} />

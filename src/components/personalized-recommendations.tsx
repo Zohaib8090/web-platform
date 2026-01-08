@@ -45,7 +45,9 @@ export default function PersonalizedRecommendations({
       }
     };
 
-    fetchRecommendations();
+    if (typeof window !== "undefined") {
+        fetchRecommendations();
+    }
   }, [viewingHistory]);
 
   if (isLoading) {
